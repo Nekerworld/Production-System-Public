@@ -24,7 +24,7 @@ np.random.seed(RandomSeed)
 tf.random.set_seed(RandomSeed)
 
 # 경로 설정
-DATA_DIR = r'C:\YS\TUK\S4E1\생산시스템구축실무\TeamProject\Production_System_TeamProject\data\장비이상 조기탐지\5공정_180sec'
+DATA_DIR = os.path.join('data', '장비이상 조기탐지', '5공정_180sec')
 csv_paths = [p for p in glob(os.path.join(DATA_DIR, '*.csv')) if
              'Error Lot list' not in os.path.basename(p)]
 error_df   = pd.read_csv(os.path.join(DATA_DIR, 'Error Lot list.csv'))
@@ -176,7 +176,9 @@ for i, hist in enumerate(window_histories):
 plt.title('Model Accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.xscale('log')
+plt.yscale('log')
+# plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.grid(True)
 
 # Loss plot
@@ -186,9 +188,40 @@ for i, hist in enumerate(window_histories):
 plt.title('Model Loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
+plt.xscale('log')
+plt.yscale('log')
+# plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True)
+plt.tight_layout()
+
+# 학습 히스토리 그래프 저장
+plt.savefig(os.path.join('models', 'training_history.png'), dpi=1200, bbox_inches='tight')
+plt.close()
+
+# Plot with Legends
+plt.subplot(1, 2, 1)
+for i, hist in enumerate(window_histories):
+    plt.plot(hist['accuracy'], alpha=0.3, label=f'Window {i+1} Train')
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.xscale('log')
+plt.yscale('log')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True)
+plt.subplot(1, 2, 2)
+for i, hist in enumerate(window_histories):
+    plt.plot(hist['loss'], alpha=0.3, label=f'Window {i+1} Train')
+plt.title('Model Loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.xscale('log')
+plt.yscale('log')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.grid(True)
 plt.tight_layout()
+plt.savefig(os.path.join('models', 'training_history(with_legends).png'), dpi=1200, bbox_inches='tight')
+plt.close()
 
 # Confusion Matrix 시각화
 plt.figure(figsize=(8, 6))
@@ -200,6 +233,10 @@ plt.title('Confusion Matrix')
 plt.ylabel('True Label')
 plt.xlabel('Predicted Label')
 plt.tight_layout()
+
+# Confusion Matrix 그래프 저장
+plt.savefig(os.path.join('models', 'confusion_matrix.png'), dpi=1200, bbox_inches='tight')
+plt.close()
 
 # 실시간 예측을 위한 함수들
 def load_model_and_scaler():
