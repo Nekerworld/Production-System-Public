@@ -18,6 +18,8 @@ import joblib
 from typing import List, Tuple, Optional, Dict, Any, Union
 from dataclasses import dataclass
 from pathlib import Path
+from glob import glob
+from collections import deque
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # 상수 정의
 SEQ_LEN = 10  # 시퀀스 길이
+DATA_DIR = os.path.join('data', '장비이상 조기탐지', '5공정_180sec')  # 데이터 디렉토리
 
 # 페이지 설정
 st.set_page_config(
@@ -54,30 +57,124 @@ class AnomalyPredictor:
         """
         self.model_dir = Path(model_dir)
         self.model: Optional[keras.Model] = None
-        self.scalers: List[StandardScaler] = []
+        self.scaler: Optional[StandardScaler] = None
         self.seq_len = SEQ_LEN
         self.threshold = 0.5
+        self.historical_data: Optional[pd.DataFrame] = None
+        self.window_buffer: deque[Dict[str, Any]] = deque(maxlen=SEQ_LEN)
+        
+    def load_historical_data(self) -> None:
+        """기존 데이터를 로드합니다."""
+        try:
+            # 에러 데이터 로드
+            error_df = pd.read_csv(os.path.join(DATA_DIR, 'Error Lot list.csv'))
+            
+            def mark_anomaly(df, err):
+                df['is_anomaly'] = 0
+                for _, row in err.iterrows():
+                    date = str(row.iloc[0]).strip()
+                    procs = set(row.iloc[1:].dropna().astype(int))
+                    if procs:
+                        mask = (df['Date'] == date) & (df['Process'].isin(procs))
+                        df.loc[mask, 'is_anomaly'] = 1
+                return df
+            
+            def load_one(path):
+                df = pd.read_csv(path)
+                df['Time'] = (df['Time'].str.replace('오전', 'AM')
+                                      .str.replace('오후', 'PM'))
+                df['Time'] = pd.to_datetime(df['Time'], format='%p %I:%M:%S.%f').dt.strftime('%H:%M:%S.%f')
+                df['datetime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'])
+                df['Index'] = df['Index'].astype(int)
+                df = mark_anomaly(df, error_df)
+                return df
+            
+            # CSV 파일 경로 목록 가져오기
+            csv_paths = [p for p in glob(os.path.join(DATA_DIR, '*.csv')) if
+                        'Error Lot list' not in os.path.basename(p)]
+            
+            # 모든 데이터프레임 로드 및 병합
+            dataframes = [load_one(p) for p in csv_paths]
+            self.historical_data = pd.concat(dataframes, ignore_index=True)
+            self.historical_data = self.historical_data.sort_values('datetime')  # 시간순 정렬
+            
+            logger.info("기존 데이터 로드 완료")
+        except Exception as e:
+            logger.error(f"기존 데이터 로드 실패: {str(e)}")
+            raise
         
     def load_models(self) -> None:
         """모델과 스케일러를 로드합니다."""
         try:
             # 모델 로드
-            model_path = self.model_dir / 'prediction_model.h5'
+            model_path = self.model_dir / 'final_model.keras'
             if not model_path.exists():
                 raise FileNotFoundError(f"모델 파일을 찾을 수 없습니다: {model_path}")
             self.model = keras.models.load_model(model_path)
             logger.info("모델 로드 완료")
             
             # 스케일러 로드
-            scaler_files = list(self.model_dir.glob('*_scaler.pkl'))
+            scaler_files = list(self.model_dir.glob('global_scaler.pkl'))
             if not scaler_files:
                 raise FileNotFoundError("스케일러 파일을 찾을 수 없습니다.")
             
-            self.scalers = [joblib.load(scaler_file) for scaler_file in scaler_files]
-            logger.info(f"{len(self.scalers)}개의 스케일러 로드 완료")
+            self.scaler = joblib.load(scaler_files[0])
+            logger.info("스케일러 로드 완료")
+            
+            # 기존 데이터 로드
+            self.load_historical_data()
             
         except Exception as e:
             logger.error(f"모델/스케일러 로드 실패: {str(e)}")
+            raise
+    
+    def prepare_single_input(self, current: float, temp: float) -> pd.DataFrame:
+        """
+        단일 입력값을 시퀀스 데이터로 변환합니다.
+        
+        Args:
+            current (float): 전류 값
+            temp (float): 온도 값
+            
+        Returns:
+            pd.DataFrame: 시퀀스 데이터
+        """
+        try:
+            if self.historical_data is None:
+                raise ValueError("기존 데이터가 로드되지 않았습니다.")
+            
+            # 현재 시간 기준으로 시퀀스 생성
+            current_time = datetime.now()
+            
+            # 기존 데이터에서 가장 유사한 패턴 찾기
+            ref_data = self.historical_data[['Current', 'Temp']].values
+            input_data = np.array([[current, temp]])
+            
+            # 유사도 계산 (유클리드 거리)
+            distances = np.linalg.norm(ref_data - input_data, axis=1)
+            most_similar_idx = np.argmin(distances)
+            
+            # 가장 유사한 시퀀스의 이전 데이터 사용
+            start_idx = max(0, most_similar_idx - self.seq_len + 1)
+            sequence = self.historical_data.iloc[start_idx:start_idx + self.seq_len - 1].copy()
+            
+            # 마지막 데이터 포인트 추가
+            new_point = pd.DataFrame({
+                'Date': [current_time.strftime('%Y-%m-%d')],
+                'Time': [current_time.strftime('%p %I:%M:%S.%f')],
+                'Current': [current],
+                'Temp': [temp],
+                'Process': [1],
+                'datetime': [current_time],
+                'Index': [sequence['Index'].iloc[-1] + 1],
+                'is_anomaly': [0]
+            })
+            
+            sequence = pd.concat([sequence, new_point], ignore_index=True)
+            return sequence
+            
+        except Exception as e:
+            logger.error(f"단일 입력 데이터 준비 실패: {str(e)}")
             raise
     
     def prepare_sequence(self, data: pd.DataFrame, scaler: StandardScaler) -> np.ndarray:
@@ -132,39 +229,62 @@ class AnomalyPredictor:
             start_time = pd.to_datetime(last_sequence['datetime'].iloc[0])
             end_time = pd.to_datetime(last_sequence['datetime'].iloc[-1])
             
-            timestamps = pd.to_datetime(data['datetime'].iloc[-len(predictions):])
+            # 단일 그래프로 변경
+            fig = go.Figure()
             
-            fig = make_subplots(
-                rows=2, cols=1,
-                shared_xaxes=True,
-                vertical_spacing=0.05,
-                subplot_titles=('Temperature', 'Current')
-            )
+            if self.historical_data is not None:
+                # 정상 및 이상 데이터 분류
+                normal_data = self.historical_data[self.historical_data['is_anomaly'] == 0]
+                anomaly_data = self.historical_data[self.historical_data['is_anomaly'] == 1]
+                
+                # 각 데이터에서 1%만 샘플링
+                normal_sample = normal_data.sample(frac=0.01, random_state=42) if not normal_data.empty else pd.DataFrame()
+                anomaly_sample = anomaly_data.sample(frac=0.01, random_state=42) if not anomaly_data.empty else pd.DataFrame()
+                
+                # 정상 데이터 시각화
+                if not normal_sample.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=normal_sample['Temp'],
+                            y=normal_sample['Current'],
+                            mode='markers',
+                            name='Normal Data',
+                            marker=dict(color='blue', size=5, opacity=0.6)
+                        )
+                    )
+                
+                # 이상 데이터 시각화
+                if not anomaly_sample.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=anomaly_sample['Temp'],
+                            y=anomaly_sample['Current'],
+                            mode='markers',
+                            name='Anomaly Data',
+                            marker=dict(color='red', size=7, symbol='x')
+                        )
+                    )
+
+            # 현재 입력된 데이터를 눈에 띄는 점으로 추가
+            current_temp = data['Temp'].iloc[-1]
+            current_current = data['Current'].iloc[-1]
             
             fig.add_trace(
                 go.Scatter(
-                    x=timestamps,
-                    y=data['Temp'].iloc[-len(predictions):],
-                    name='Temperature',
-                    line=dict(color='blue')
-                ),
-                row=1, col=1
+                    x=[current_temp],
+                    y=[current_current],
+                    mode='markers',
+                    name='Input Point',
+                    marker=dict(color='orange', size=12, symbol='star')
+                )
             )
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=timestamps,
-                    y=data['Current'].iloc[-len(predictions):],
-                    name='Current',
-                    line=dict(color='green')
-                ),
-                row=2, col=1
-            )
-            
+
             fig.update_layout(
                 height=600,
                 showlegend=True,
-                title_text="Sensor Data with Predictions"
+                title_text="Current vs. Temperature Anomaly Detection",
+                xaxis_title="Temperature",
+                yaxis_title="Current"
             )
             
             return PredictionResult(
@@ -179,7 +299,7 @@ class AnomalyPredictor:
                     'process_id': int(last_sequence['Process'].iloc[-1])
                 },
                 prediction_history={
-                    'timestamps': [ts.strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps],
+                    'timestamps': [start_time.strftime('%Y-%m-%d %H:%M:%S')],
                     'probabilities': [float(p[0]) for p in predictions]
                 },
                 visualization=fig
@@ -201,7 +321,7 @@ class AnomalyPredictor:
                 (전체 시퀀스에 대한 예측 확률, 마지막 시퀀스의 예측 확률, 포맷팅된 결과)
         """
         try:
-            if self.model is None or not self.scalers:
+            if self.model is None or self.scaler is None:
                 self.load_models()
             
             if 'datetime' not in data.columns:
@@ -210,19 +330,14 @@ class AnomalyPredictor:
                 data['Time'] = pd.to_datetime(data['Time'], format='%p %I:%M:%S.%f').dt.strftime('%H:%M:%S.%f')
                 data['datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'])
             
-            all_predictions = []
-            for scaler in self.scalers:
-                X = self.prepare_sequence(data, scaler)
-                predictions = self.model.predict(X, verbose=0)
-                all_predictions.append(predictions)
+            X = self.prepare_sequence(data, self.scaler)
+            predictions = self.model.predict(X, verbose=0)
+            last_probability = predictions[-1][0]
             
-            final_predictions = np.mean(all_predictions, axis=0)
-            last_probability = final_predictions[-1][0]
-            
-            formatted_result = self.format_prediction_result(final_predictions, data, last_probability)
+            formatted_result = self.format_prediction_result(predictions, data, last_probability)
             
             logger.info(f"예측 완료: 마지막 시퀀스의 이상치 확률 = {last_probability*100:.2f}%")
-            return final_predictions, last_probability, formatted_result
+            return predictions, last_probability, formatted_result
             
         except Exception as e:
             logger.error(f"예측 실패: {str(e)}")
@@ -235,7 +350,7 @@ def get_predictor() -> Optional[AnomalyPredictor]:
     try:
         predictor.load_models()
     except Exception as e:
-        st.error(f"모델 로드 실패: {e}. 'models' 디렉토리에 prediction_model.h5와 scaler 파일들이 있는지 확인해주세요.")
+        st.error(f"모델 로드 실패: {e}. 'models' 디렉토리에 final_model.keras와 global_scaler.pkl 파일들이 있는지 확인해주세요.")
         return None
     return predictor
 
@@ -251,67 +366,25 @@ def main() -> None:
     col1, col2 = st.columns(2)
 
     with col1:
-        current_input = st.number_input("전류 값 (Current)", min_value=0.0, value=1.0, step=0.01)
+        current_input = st.number_input("전류 값 (Current)", min_value=0.0, value=1.6, step=0.01)
     with col2:
-        temp_input = st.number_input("온도 값 (Temperature)", min_value=0.0, value=25.0, step=0.01)
+        temp_input = st.number_input("온도 값 (Temperature)", min_value=0.0, value=70.0, step=0.01)
 
-    if 'manual_check_data_history' not in st.session_state:
-        st.session_state.manual_check_data_history = pd.DataFrame(
-            columns=['Date', 'Time', 'Current', 'Temp', 'Process', 'datetime']
-        )
-    
     if st.button("이상치 검사 실행"):
-        if len(st.session_state.manual_check_data_history) < (SEQ_LEN - 1):
-            st.warning(f"과거 데이터가 부족합니다. 최소 {SEQ_LEN-1}개의 데이터가 필요합니다.")
-            st.info(f"현재 {len(st.session_state.manual_check_data_history)}개 데이터만 있습니다. 여러 번 입력해주세요.")
-            
-            for _ in range((SEQ_LEN - 1) - len(st.session_state.manual_check_data_history)):
-                dummy_time = datetime.now() - timedelta(seconds=(SEQ_LEN - 1 - _))
-                st.session_state.manual_check_data_history = pd.concat([
-                    st.session_state.manual_check_data_history,
-                    pd.DataFrame({
-                        'Date': [dummy_time.strftime('%Y-%m-%d')],
-                        'Time': [dummy_time.strftime('%p %I:%M:%S.%f')],
-                        'Current': [1.0],
-                        'Temp': [25.0],
-                        'Process': [1],
-                        'datetime': [dummy_time]
-                    })
-                ], ignore_index=True)
-
-        current_time = datetime.now()
-        new_data_point = pd.DataFrame({
-            'Date': [current_time.strftime('%Y-%m-%d')],
-            'Time': [current_time.strftime('%p %I:%M:%S.%f')],
-            'Current': [current_input],
-            'Temp': [temp_input],
-            'Process': [1],
-            'datetime': [current_time]
-        })
-        
-        st.session_state.manual_check_data_history = pd.concat(
-            [st.session_state.manual_check_data_history, new_data_point],
-            ignore_index=True
-        )
-        
-        if len(st.session_state.manual_check_data_history) > SEQ_LEN:
-            st.session_state.manual_check_data_history = st.session_state.manual_check_data_history.tail(SEQ_LEN).reset_index(drop=True)
-        
         try:
-            if len(st.session_state.manual_check_data_history) < SEQ_LEN:
-                st.error(f"데이터 시퀀스 길이가 부족하여 예측할 수 없습니다. 최소 {SEQ_LEN}개의 데이터가 필요합니다.")
-                st.stop()
-
-            data_for_prediction = st.session_state.manual_check_data_history.tail(SEQ_LEN).copy()
-            _, last_prob, result = predictor.predict(data_for_prediction)
+            # 단일 입력값으로 시퀀스 데이터 생성
+            sequence_data = predictor.prepare_single_input(current_input, temp_input)
+            
+            # 예측 수행
+            _, last_prob, result = predictor.predict(sequence_data)
             
             st.subheader("검사 결과")
             col_res1, col_res2 = st.columns(2)
             with col_res1:
                 st.metric("이상치 확률", f"{result.anomaly_probability*100:.2f}%")
             with col2:
-                status_text = "정상" if not result.is_anomaly else "이상 감지"
-                status_color = "green" if not result.is_anomaly else "red"
+                status_text = "이상 감지" if result.is_anomaly else "정상"
+                status_color = "red" if result.is_anomaly else "green"
                 st.markdown(
                     f"<div style='font-size:20px; color:{status_color}; font-weight:bold;'>상태: {status_text}</div>",
                     unsafe_allow_html=True
@@ -326,7 +399,7 @@ def main() -> None:
                 st.session_state.manual_check_history = []
             
             st.session_state.manual_check_history.append({
-                'timestamp': current_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'current': current_input,
                 'temperature': temp_input,
                 'probability': result.anomaly_probability * 100,
@@ -340,14 +413,11 @@ def main() -> None:
             else:
                 st.info("아직 검사 결과가 없습니다.")
 
-        except ValueError as ve:
-            st.error(f"데이터 오류: {ve}")
-            st.warning("예측을 위해서는 최소 10개의 연속된 데이터 포인트가 필요합니다. 몇 번 더 입력해보세요.")
         except Exception as e:
-            st.error(f"예측 중 알 수 없는 오류 발생: {e}")
+            st.error(f"예측 중 오류 발생: {e}")
 
     st.markdown("---")
-    st.markdown("**참고:** 예측 모델은 최소 10개의 연속된 데이터 포인트(시퀀스)를 기반으로 작동합니다. 첫 몇 번의 입력 시에는 '과거 데이터 부족' 메시지가 나타날 수 있습니다.")
+    st.markdown("**참고:** 입력된 값은 기존 데이터와 비교하여 가장 유사한 패턴을 찾아 예측을 수행합니다.")
 
 if __name__ == "__main__":
     main()
