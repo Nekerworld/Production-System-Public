@@ -87,6 +87,17 @@ def main():
     # 메트릭 표시를 위한 placeholder
     metric_placeholder = st.empty()
     
+    # 데이터포인트 수 조절 슬라이더
+    st.sidebar.markdown("### 그래프 설정")
+    num_points = st.sidebar.slider(
+        "표시할 데이터포인트 수",
+        min_value=10,
+        max_value=100,
+        value=50,
+        step=10,
+        help="그래프에 표시되는 최대 데이터포인트의 수를 조절하세요."
+    )
+    
     while True:
         # 현재 데이터 가져오기
         current_data = df.iloc[st.session_state.current_index]
@@ -119,8 +130,8 @@ def main():
                            vertical_spacing=0.1,
                            subplot_titles=('전류', '온도'))
         
-        # 최근 100개 데이터 포인트만 표시
-        start_idx = max(0, st.session_state.current_index - 100)
+        # 선택된 수만큼의 데이터 포인트만 표시
+        start_idx = max(0, st.session_state.current_index - num_points)
         end_idx = st.session_state.current_index + 1
         
         fig.add_trace(
