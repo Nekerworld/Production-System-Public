@@ -22,7 +22,10 @@ ipython_config.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg-info/
 
 # C extensions
 *.so
@@ -645,3 +648,33 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/python,r,visualstudio,visualstudiocode,jupyternotebooks
+
+# 가상환경
+.venv/
+venv/
+ENV/
+
+# Jupyter 노트북 체크포인트
+.ipynb_checkpoints/
+
+# 결과 이미지
+*.png
+*.jpg
+*.jpeg
+*.svg
+
+# 로그 및 임시 파일
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 기타 IDE/OS 관련
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# 환경설정 파일(필요시 주석 해제)
+# .env
