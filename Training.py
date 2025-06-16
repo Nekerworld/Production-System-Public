@@ -196,6 +196,7 @@ plt.tight_layout()
 
 # 학습 히스토리 그래프 저장
 plt.savefig(os.path.join('models', 'training_history.png'), dpi=1200, bbox_inches='tight')
+plt.savefig(os.path.join('images', 'training_history.png'), dpi=1200, bbox_inches='tight')
 plt.close()
 
 # Plot with Legends
@@ -221,6 +222,7 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(os.path.join('models', 'training_history(with_legends).png'), dpi=1200, bbox_inches='tight')
+plt.savefig(os.path.join('images', 'training_history(with_legends).png'), dpi=1200, bbox_inches='tight')
 plt.close()
 
 # Confusion Matrix 시각화
@@ -236,6 +238,7 @@ plt.tight_layout()
 
 # Confusion Matrix 그래프 저장
 plt.savefig(os.path.join('models', 'confusion_matrix.png'), dpi=1200, bbox_inches='tight')
+plt.savefig(os.path.join('images', 'confusion_matrix.png'), dpi=1200, bbox_inches='tight')
 plt.close()
 
 # 실시간 예측을 위한 함수들
