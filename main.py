@@ -13,6 +13,14 @@ st.set_page_config(
     layout="wide"
 )
 
+# 사이드바 내용 추가
+st.sidebar.header("2조 전자경영 팀")
+st.sidebar.write("총괄팀장: 이인수")
+st.sidebar.write("개발팀장: 김윤성")
+st.sidebar.write("분석팀장: 최승환")
+st.sidebar.write("조원: 이지원")
+st.sidebar.markdown("---")
+
 # --- 1. 히어로 섹션 ---
 with st.container():
     st.markdown("""
