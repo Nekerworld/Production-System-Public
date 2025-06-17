@@ -657,12 +657,6 @@ ENV/
 # Jupyter 노트북 체크포인트
 .ipynb_checkpoints/
 
-# 결과 이미지
-*.png
-*.jpg
-*.jpeg
-*.svg
-
 # 로그 및 임시 파일
 *.log
 *.tmp
