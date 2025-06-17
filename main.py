@@ -274,7 +274,7 @@ with st.container():
                 </div>
                 <div class="contact-item">
                     <i class="fab fa-github"></i>
-                    <a href="https://github.com/Nekerworld/Production-System-Public" target="_blank">GitHub Profile</a>
+                    <a href="https://github.com/Nekerworld/Production-System-Public" target="_blank">GitHub Repository</a>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt"></i>
