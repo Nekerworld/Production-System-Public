@@ -133,6 +133,54 @@ def get_total_data_points():
         return 0
     return len(df)
 
+def get_anomaly_detection_rate():
+    """이상 감지율을 계산하는 함수"""
+    df = load_historical_data()
+    if df is None or 'is_anomaly' not in df.columns or 'prediction' not in df.columns:
+        return 0.0
+    
+    # 예측 점수를 이진 클래스로 변환 (임계값 0.5 사용)
+    binary_prediction = (df['prediction'] >= 0.5).astype(int)
+    
+    # 실제 이상치 중에서 제대로 감지된 비율
+    true_positives = ((df['is_anomaly'] == 1) & (binary_prediction == 1)).sum()
+    total_anomalies = (df['is_anomaly'] == 1).sum()
+    
+    if total_anomalies == 0:
+        return 0.0
+    
+    return (true_positives / total_anomalies) * 100
+
+def get_false_detection_rate():
+    """오탐지율을 계산하는 함수"""
+    df = load_historical_data()
+    if df is None or 'is_anomaly' not in df.columns or 'prediction' not in df.columns:
+        return 0.0
+    
+    # 예측 점수를 이진 클래스로 변환 (임계값 0.5 사용)
+    binary_prediction = (df['prediction'] >= 0.5).astype(int)
+    
+    # 정상 데이터 중에서 이상으로 잘못 감지된 비율
+    false_positives = ((df['is_anomaly'] == 0) & (binary_prediction == 1)).sum()
+    total_normal = (df['is_anomaly'] == 0).sum()
+    
+    if total_normal == 0:
+        return 0.0
+    
+    return (false_positives / total_normal) * 100
+
+def get_system_uptime():
+    """시스템 가동률을 계산하는 함수"""
+    # 실제 구현에서는 시스템 로그나 모니터링 데이터를 사용해야 합니다.
+    # 현재는 데모를 위해 고정값 반환
+    return 99.9
+
+def get_average_response_time():
+    """평균 응답 시간을 계산하는 함수"""
+    # 실제 구현에서는 시스템 로그나 모니터링 데이터를 사용해야 합니다.
+    # 현재는 데모를 위해 고정값 반환
+    return 0.12
+
 def main():
     st.title("📊 데이터 분석")
     
