@@ -134,7 +134,7 @@ def main():
         return
     
     # 1. 데이터 통계 정보
-    st.header("1. 데이터 통계 정보")
+    st.header("데이터 통계 정보")
     
     col1, col2, col3 = st.columns(3)
     
@@ -153,7 +153,7 @@ def main():
             st.metric("정상 데이터 수", "N/A")
     
     # 2. 과거 데이터 분석
-    st.header("2. 과거 데이터 분석")
+    st.header("과거 데이터 분석")
     
     # 'timestamp', 'current', 'temperature' 컬럼 존재 여부 확인
     if 'timestamp' in df.columns and 'current' in df.columns and 'temperature' in df.columns:
@@ -229,7 +229,7 @@ def main():
         st.warning("과거 데이터 분석을 위한 필수 컬럼 (timestamp, current, temperature)이 없습니다.")
     
     # 3. 이상 감지 패턴 분석
-    st.header("3. 이상 감지 패턴 분석")
+    st.header("이상 감지 패턴 분석")
     
     if 'is_anomaly' in df.columns and 'timestamp' in df.columns:
         pattern_analysis = analyze_anomaly_patterns(df)
@@ -263,7 +263,7 @@ def main():
 
     
     # 4. 모델 성능 지표
-    st.header("4. 모델 성능 지표")
+    st.header("모델 성능 지표")
     
     if 'is_anomaly' in df.columns and 'prediction' in df.columns:
         metrics = calculate_model_metrics(df)
