@@ -4,6 +4,8 @@
 # 모델 성능 지표
 # 데이터 통계 정보
 
+# 3번파일은 Alert Settings 였는데, 개발 도중 삭제하고 Settings로 통합하였습니다.
+
 import streamlit as st
 import pandas as pd
 import numpy as np
