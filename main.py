@@ -18,6 +18,7 @@ with st.container():
     st.markdown("""
     <style>
     @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+    @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
 
     * {
         font-family: Pretendard;
@@ -36,7 +37,7 @@ with st.container():
     }
 
     .section1 {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url('https://i.imgur.com/wVwCjnr.jpeg') no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -44,7 +45,7 @@ with st.container():
     }
 
     .section2 {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url('https://i.imgur.com/cW4y4s3.jpeg') no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -52,7 +53,7 @@ with st.container():
     }
 
     .section3 {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url('https://i.imgur.com/iUenTpM.jpeg') no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -60,7 +61,7 @@ with st.container():
     }
 
     .section4 {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url('https://i.imgur.com/c5tnILg.jpeg') no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -68,7 +69,7 @@ with st.container():
     }
 
     .section5 {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url('https://i.imgur.com/OHGBO4C.jpeg') no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -76,7 +77,7 @@ with st.container():
     }
 
     .section6 {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                     url('https://i.imgur.com/bcps4wK.jpeg') no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -85,14 +86,14 @@ with st.container():
 
     .section-content {
         color: white;
-        padding: 2rem;
+        padding: 5rem;
         background: rgba(30, 57, 50, 0.8);
         border-radius: 10px;
-        max-width: 800px;
+        max-width: 1000px;
     }
 
     .hero-title {
-        font-size: 4.5em;
+        font-size: 5em;
         font-weight: 700;
         text-align: center;
         margin-bottom: 0.5em;
@@ -132,6 +133,28 @@ with st.container():
         padding: 0.8em 0;
         color: white;
     }
+
+    .contact-info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 2em;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin: 0 1em;
+    }
+
+    .contact-item i {
+        margin-right: 0.5em;
+    }
+
+    .contact-item a {
+        color: white;
+        text-decoration: none;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -140,7 +163,7 @@ with st.container():
     <div class='section section1'>
         <div class='section-content'>
             <h1 class='hero-title'>열풍건조 장비 이상감지</h1>
-            <p class='hero-subtitle'>열풍건조 공정의 비정상 패턴을 AI 모델을 활용하여 실시간으로 감지하고 이상을 예측함으로써 생산 효율을 극대화합니다.</p>
+            <p class='hero-subtitle'>열풍건조 공정의 비정상 패턴을 AI 모델을 활용하여 실시간으로 감지하고 <br>이상을 예측함으로써 생산 효율을 극대화합니다.</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -151,8 +174,8 @@ with st.container():
         <div class='section-content'>
             <h2 class='section-header'>생산 현장의 보이지 않는 위협</h2>
             <p class='section-text'>
-            복잡한 생산 공정에서 발생하는 미세한 이상 징후는 생산성 저하, 품질 불량, 심지어는 치명적인 설비 고장으로 이어질 수 있습니다.
-            전통적인 방식으로는 이러한 비정상 패턴을 사전에 감지하기 어렵고, 문제가 발생한 후에야 인지하는 경우가 대부분입니다.
+            복잡한 생산 공정에서 발생하는 미세한 이상 징후는 생산성 저하, 품질 불량, 심지어는 치명적인 설비 고장으로 <br>이어질 수 있습니다.
+            전통적인 방식으로는 이러한 비정상 패턴을 사전에 감지하기 어렵고, <br>문제가 발생한 후에야 인지하는 경우가 대부분입니다.
             </p>
         </div>
     </div>
@@ -164,8 +187,8 @@ with st.container():
         <div class='section-content'>
             <h2 class='section-header'>우리의 솔루션: AI 기반 실시간 모니터링</h2>
             <p class='section-text'>
-            우리의 시스템은 열풍건조 공정에서 발생하는 방대한 센서 데이터(전류, 온도 등)를 딥러닝 모델이 실시간으로 분석합니다.
-            정상 범주를 벗어나는 미세한 변화까지 학습하여 이상 징후를 즉시 감지하고, 관리자에게 알림을 전송합니다.
+            AI 모델 기반 모니터링 시스템은 열풍건조 공정에서 발생하는 전류와 온도 등의 방대한 센서 데이터를 <br>딥러닝 모델이 실시간으로 분석합니다.
+            정상 범주를 벗어나는 미세한 변화까지 학습하여 <br>이상 징후를 즉시 감지하고, 관리자에게 알림을 전송합니다.
             </p>
             <ul class='section-text'>
                 <li class='feature-point'><b>실시간 이상 감지:</b> 딥러닝 모델이 연속적인 데이터를 분석하여 비정상 패턴 즉시 식별.</li>
@@ -183,7 +206,7 @@ with st.container():
         <div class='section-content'>
             <h2 class='section-header'>견고한 시스템을 위한 핵심 기술</h2>
             <p class='section-text'>
-            최첨단 딥러닝 알고리즘과 현대적인 웹 프레임워크를 결합하여 안정적이고 효율적인 모니터링 시스템을 구축했습니다.
+            최첨단 딥러닝 알고리즘과 현대적인 웹 프레임워크를 결합하여 <br>안정적이고 효율적인 모니터링 시스템을 구축했습니다.
             </p>
             <ul class='section-text'>
                 <li class='feature-point'><b>LSTM 딥러닝 모델:</b> 시계열 데이터의 장기 의존성을 학습하여 고도화된 이상 감지 수행.</li>
@@ -200,7 +223,7 @@ with st.container():
         <div class='section-content'>
             <h2 class='section-header'>생산 효율을 한 단계 끌어올리다</h2>
             <p class='section-text'>
-            우리의 시스템은 단순한 모니터링을 넘어, 실제적인 비즈니스 가치를 창출합니다.
+            우리의 시스템은 단순한 모니터링을 넘어, 실제 비즈니스 가치를 창출합니다.
             </p>
             <ul class='section-text'>
                 <li class='feature-point'><b>생산성 향상:</b> 이상 발생률 감소 및 예측을 통한 가동 시간 극대화.</li>
@@ -220,7 +243,25 @@ with st.container():
             <p class='section-text'>
             본 시스템에 대한 더 자세한 정보나 문의 사항이 있으시면 언제든지 연락 주십시오.
             </p>
-            <p class='section-text'>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:chrisabc94@gmail.com">chrisabc94@gmail.com</a>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>+82 10-2204-4587</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fab fa-github"></i>
+                    <a href="https://github.com/Nekerworld/Production-System-Public" target="_blank">GitHub Profile</a>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>한국공학대학교</span>
+                </div>
+            </div>
+            <p class='section-text' style='margin-top: 2em;'>
             지금 바로 시작하여 더 스마트하고 효율적인 생산 시스템을 구축하세요.
             </p>
         </div>
