@@ -1,0 +1,15 @@
+tensorflow
+keras-preprocessing
+numpy
+pandas
+scikit-learn
+scipy
+matplotlib
+seaborn
+imbalanced-learn
+xgboost
+streamlit
+plotly
+joblib
+h5py
+protobuf 
