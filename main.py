@@ -94,10 +94,22 @@ with st.container():
 
     .section-content {
         color: white;
-        padding: 5rem;
-        background: rgba(30, 57, 50, 0.8);
-        border-radius: 10px;
+        padding: 3rem 4rem;
+        background: rgba(30, 57, 30, 0.75);
+        border-radius: 15px;
         max-width: 1000px;
+        position: relative;
+        z-index: 1;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    .section-content:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.45);
     }
 
     .hero-title {
