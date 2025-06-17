@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
+from glob import glob
 
 # 페이지 설정
 st.set_page_config(
@@ -20,21 +21,40 @@ st.set_page_config(
     layout="wide"
 )
 
-def load_historical_data():
-    """과거 데이터를 로드하는 함수"""
-    data_file = Path("data/20250218_anomaly_data.csv")
-    if not data_file.exists():
-        st.error("데이터 파일을 찾을 수 없습니다.")
-        return None
-    
-    try:
-        df = pd.read_csv(data_file)
-        # timestamp 컬럼을 datetime 형식으로 변환
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        return df
-    except Exception as e:
-        st.error(f"데이터 로드 중 오류 발생: {str(e)}")
-        return None
+# 경로 설정
+DATA_DIR = os.path.join('data', '장비이상 조기탐지', '5공정_180sec')
+csv_paths = [p for p in glob(os.path.join(DATA_DIR, '*.csv')) if
+             'Error Lot list' not in os.path.basename(p)]
+error_df   = pd.read_csv(os.path.join(DATA_DIR, 'Error Lot list.csv'))
+
+# 파라미터
+WINDOW_WIDTH  = 3    # 한 번에 묶을 CSV 개수
+SLIDE_STEP    = 1    # Stride
+SEQ_LEN       = 10   # LSTM 시계열 길이
+TRAIN_RATIO   = 0.7
+VAL_RATIO     = 0.1
+
+def mark_anomaly(df, err):
+    df['is_anomaly'] = 0
+    for _, row in err.iterrows():
+        date  = str(row.iloc[0]).strip()
+        procs = set(row.iloc[1:].dropna().astype(int))
+        if procs:
+            mask = (df['Date'] == date) & (df['Process'].isin(procs))
+            df.loc[mask, 'is_anomaly'] = 1
+    return df
+
+def load_one(path):
+    df = pd.read_csv(path)
+    df['Time'] = (df['Time'].str.replace('오전', 'AM')
+                            .str.replace('오후', 'PM'))
+    df['Time'] = pd.to_datetime(df['Time'], format='%p %I:%M:%S.%f').dt.strftime('%H:%M:%S.%f')
+    df['datetime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'])
+    df['Index'] = df['Index'].astype(int)
+    df = mark_anomaly(df, error_df)
+    return df
+
+dataframes = [load_one(p) for p in csv_paths]
 
 def analyze_anomaly_patterns(df):
     """이상 감지 패턴을 분석하는 함수"""
@@ -76,7 +96,7 @@ def main():
     st.title("📊 데이터 분석")
     
     # 데이터 로드
-    df = load_historical_data()
+    df = dataframes
     
     if df is None:
         st.error("분석할 데이터가 없습니다.")
