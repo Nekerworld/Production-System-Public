@@ -5,6 +5,7 @@
 # 최근 이상 감지 기록
 
 import streamlit as st
+from pages.Data_Analysis import get_total_data_points
 
 # 페이지 설정
 st.set_page_config(
@@ -30,7 +31,9 @@ with col1:
 with col2:
     st.metric(label="마지막 업데이트", value="2024-03-21 15:30:00")
 with col3:
-    st.metric(label="데이터 포인트", value="1,234")
+    # 데이터 분석 페이지에서 데이터 포인트 수 가져오기
+    total_points = get_total_data_points()
+    st.metric(label="데이터 포인트", value=f"{total_points:,}")
 
 # 주요 지표
 st.header("주요 지표")

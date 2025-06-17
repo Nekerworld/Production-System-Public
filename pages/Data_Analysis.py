@@ -126,6 +126,13 @@ def calculate_model_metrics(df):
     
     return metrics
 
+def get_total_data_points():
+    """전체 데이터 포인트 수를 반환하는 함수"""
+    df = load_historical_data()
+    if df is None:
+        return 0
+    return len(df)
+
 def main():
     st.title("📊 데이터 분석")
     
