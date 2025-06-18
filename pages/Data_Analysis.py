@@ -276,9 +276,10 @@ def main():
     
     with tab1:
         if 'is_anomaly' in df.columns:
+            # 항상 전체 데이터프레임 보여주기
+            st.dataframe(df, use_container_width=True)
             anomaly_data = df[df['is_anomaly'] == 1]
             if not anomaly_data.empty:
-                st.dataframe(anomaly_data, use_container_width=True)
                 st.warning(f"이상 데이터 수: {len(anomaly_data)}")
             else:
                 st.success("이상 데이터 없음")
@@ -287,28 +288,130 @@ def main():
     
     with tab2:
         if 'is_anomaly' in df.columns:
-            col1, col2 = st.columns([1, 2])
+            col1, col2, col3 = st.columns([1, 2, 2])
             with col1:
                 # 정상/이상 분포 파이 차트
-                anomaly_counts = df['is_anomaly'].value_counts()
-                fig = px.pie(
-                    values=anomaly_counts.values,
-                    names=['정상', '이상'],
-                    title='정상/이상 데이터 분포'
-                )
+                is_anomaly_exist = df['is_anomaly'].unique()
+                if len(is_anomaly_exist) == 1:
+                    # 정상만 있으면
+                    if is_anomaly_exist[0] == 0:
+                        values = [1]
+                        names = ['정상']
+                        colors = ['#1f77b4']
+                    # 이상만 있으면
+                    else:
+                        values = [1]
+                        names = ['이상']
+                        colors = ['#ff7f0e']
+                    fig = px.pie(
+                        values=values,
+                        names=names,
+                        title='정상/이상 데이터 비율',
+                        color_discrete_sequence=colors
+                    )
+                    fig.update_traces(textinfo='percent+label')
+                else:
+                    anomaly_counts = df['is_anomaly'].value_counts()
+                    fig = px.pie(
+                        values=anomaly_counts.values,
+                        names=['정상', '이상'],
+                        title='정상/이상 데이터 비율',
+                        color_discrete_sequence=['#1f77b4', '#ff7f0e']
+                    )
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
-                # 시간대별 정상/이상 분포
-                df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
-                hourly_dist = df.groupby(['hour', 'is_anomaly']).size().unstack(fill_value=0)
-                fig = px.bar(
-                    hourly_dist,
-                    title='시간대별 정상/이상 데이터 분포',
-                    labels={'value': '데이터 수', 'hour': '시간'},
-                    barmode='group'
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                is_anomaly_exist = df['is_anomaly'].unique()    # 1이면 이상치 없는거
+                if len(is_anomaly_exist) == 1:
+                    st.markdown(
+                        """
+                        <div style="
+                            background-color: #f8d7da;
+                            color: #721c24;
+                            border-radius: 8px;
+                            padding: 18px 10px;
+                            margin: 10px 0 20px 0;
+                            border: 1px solid #f5c6cb;
+                            font-weight: bold;
+                            text-align: center;
+                            font-size: 1.1em;
+                        ">
+                            🚨 이 데이터에는 이상치가 없습니다.
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                else:
+                    # 온도 분포 (Plotly)
+                    fig1 = px.histogram(
+                        df,
+                        x="Temp",
+                        color="is_anomaly",
+                        barmode="overlay",
+                        nbins=50,
+                        color_discrete_map={0: "#1f77b4", 1: "#ff7f0e"},
+                        labels={"Temp": "온도", "is_anomaly": "Error"},
+                    )
+                    fig1.update_layout(
+                        title="온도 분포",
+                        legend_title_text="Error",
+                        legend=dict(
+                            itemsizing='constant',
+                            title_font=dict(size=12),
+                            font=dict(size=12),
+                            traceorder="normal",
+                            itemclick="toggleothers"
+                        )
+                    )
+                    fig1.update_traces(opacity=0.5)
+                    st.plotly_chart(fig1, use_container_width=True)
+
+            with col3:
+                is_anomaly_exist = df['is_anomaly'].unique()    # 1이면 이상치 없는거
+                if len(is_anomaly_exist) == 1:
+                    st.markdown(
+                        """
+                        <div style="
+                            background-color: #f8d7da;
+                            color: #721c24;
+                            border-radius: 8px;
+                            padding: 18px 10px;
+                            margin: 10px 0 20px 0;
+                            border: 1px solid #f5c6cb;
+                            font-weight: bold;
+                            text-align: center;
+                            font-size: 1.1em;
+                        ">
+                            🚨 이 데이터에는 이상치가 없습니다.
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                else:
+                    # 전류 분포 (Plotly)
+                    fig2 = px.histogram(
+                        df,
+                        x="Current",
+                        color="is_anomaly",
+                        barmode="overlay",
+                        nbins=50,
+                        color_discrete_map={0: "#1f77b4", 1: "#ff7f0e"},
+                        labels={"Current": "전류", "is_anomaly": "Error"}
+                    )
+                    fig2.update_layout(
+                        title="전류 분포",
+                        legend_title_text="Error",
+                        legend=dict(
+                            itemsizing='constant',
+                            title_font=dict(size=12),
+                            font=dict(size=12),
+                            traceorder="normal",
+                            itemclick="toggleothers"
+                        )
+                    )
+                    fig2.update_traces(opacity=0.5)
+                    st.plotly_chart(fig2, use_container_width=True)
+                
         else:
             st.warning("정상/이상 분포 분석을 위한 'is_anomaly' 컬럼이 없습니다.")
     
@@ -316,15 +419,36 @@ def main():
         if 'is_anomaly' in df.columns:
             col1, col2 = st.columns([2, 1])
             with col1:
-                # 산점도
-                fig = px.scatter(
-                    df,
-                    x='timestamp',
-                    y='prediction',
-                    color='is_anomaly',
-                    title='시간에 따른 예측값 분포',
-                    labels={'prediction': '예측값', 'timestamp': '시간'}
-                )
+                is_anomaly_exist = df['is_anomaly'].unique()    # 1이면 이상치 없는거
+                if len(is_anomaly_exist) == 1:
+                    st.markdown(
+                        """
+                        <div style="
+                            background-color: #f8d7da;
+                            color: #721c24;
+                            border-radius: 8px;
+                            padding: 18px 10px;
+                            margin: 10px 0 20px 0;
+                            border: 1px solid #f5c6cb;
+                            font-weight: bold;
+                            text-align: center;
+                            font-size: 1.1em;
+                        ">
+                            🚨 이 데이터에는 이상치가 없습니다.
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                else:
+                    # 정상/이상 모두 있을 때
+                    fig = px.scatter(
+                        df,
+                        x='timestamp',
+                        y='prediction',
+                        color='is_anomaly',
+                        title='시간에 따른 예측값 분포',
+                        labels={'prediction': '예측값', 'timestamp': '시간'}
+                    )
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
@@ -345,86 +469,107 @@ def main():
         else:
             st.warning("데이터 상관관계 분석을 위한 'is_anomaly' 컬럼이 없습니다.")
    
-    # 3. 이상 감지 패턴 분석
-    st.header("이상 감지 패턴 분석")
-    
-    if 'is_anomaly' in df.columns and 'timestamp' in df.columns:
-        pattern_analysis = analyze_anomaly_patterns(df)
-        if pattern_analysis:
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # 시간대별 이상 발생 빈도
-                fig = px.bar(
-                    x=pattern_analysis['hourly_pattern'].index,
-                    y=pattern_analysis['hourly_pattern'].values,
-                    title='시간대별 이상 발생 빈도',
-                    labels={'x': '시간', 'y': '이상 발생 횟수'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with col2:
-                # 이상치 발생 간격 히스토그램
-                # timedelta를 분 단위로 변환
-                time_diff_minutes = pattern_analysis['time_diff'].dt.total_seconds() / 60
-                fig = px.histogram(
-                    time_diff_minutes,
-                    title='이상치 발생 간격 분포 (분)',
-                    labels={'value': '간격 (분)', 'count': '빈도'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("이상 감지 패턴을 분석할 데이터가 부족하거나, 필요한 컬럼이 없습니다.")
+    is_anomaly_exist = df['is_anomaly'].unique()    # 1이면 이상치 없는거
+    if len(is_anomaly_exist) == 1:
+        st.markdown(
+            """
+            <div style="
+                background-color: #f8d7da;
+                color: #721c24;
+                border-radius: 8px;
+                padding: 18px 10px;
+                margin: 10px 0 20px 0;
+                border: 1px solid #f5c6cb;
+                font-weight: bold;
+                text-align: center;
+                font-size: 1.1em;
+            ">
+                🚨 이 데이터에는 이상치가 없습니다.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     else:
-        st.warning("이상 감지 패턴 분석을 위한 필수 컬럼 (is_anomaly, timestamp)이 없습니다.")
+        # 3. 이상 감지 패턴 분석
+        st.header("이상 감지 패턴 분석")
+        
+        if 'is_anomaly' in df.columns and 'timestamp' in df.columns:
+            pattern_analysis = analyze_anomaly_patterns(df)
+            if pattern_analysis:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # 시간대별 이상 발생 빈도
+                    fig = px.bar(
+                        x=pattern_analysis['hourly_pattern'].index,
+                        y=pattern_analysis['hourly_pattern'].values,
+                        title='시간대별 이상 발생 빈도',
+                        labels={'x': '시간', 'y': '이상 발생 횟수'}
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with col2:
+                    # 이상치 발생 간격 히스토그램
+                    # timedelta를 분 단위로 변환
+                    time_diff_minutes = pattern_analysis['time_diff'].dt.total_seconds() / 60
+                    fig = px.histogram(
+                        time_diff_minutes,
+                        title='이상치 발생 간격 분포 (분)',
+                        labels={'value': '간격 (분)', 'count': '빈도'}
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("이상 감지 패턴을 분석할 데이터가 부족하거나, 필요한 컬럼이 없습니다.")
+        else:
+            st.warning("이상 감지 패턴 분석을 위한 필수 컬럼 (is_anomaly, timestamp)이 없습니다.")
 
-    
-    # 4. 모델 성능 지표
-    st.header("모델 성능 지표")
-    
-    if 'is_anomaly' in df.columns and 'prediction' in df.columns:
-        metrics = calculate_model_metrics(df)
-        if metrics:
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric("정밀도 (Precision)", f"{metrics['precision']:.3f}")
-            with col2:
-                st.metric("재현율 (Recall)", f"{metrics['recall']:.3f}")
-            with col3:
-                st.metric("F1 점수", f"{metrics['f1']:.3f}")
-            
-            # ROC 커브
-            from sklearn.metrics import roc_curve, auc
-            fpr, tpr, _ = roc_curve(df['is_anomaly'], df['prediction'])
-            roc_auc = auc(fpr, tpr)
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=fpr,
-                y=tpr,
-                name=f'ROC 커브 (AUC = {roc_auc:.3f})'
-            ))
-            fig.add_trace(go.Scatter(
-                x=[0, 1],
-                y=[0, 1],
-                name='무작위 예측',
-                line=dict(dash='dash')
-            ))
-            
-            fig.update_layout(
-                title='ROC 커브',
-                xaxis_title='False Positive Rate',
-                yaxis_title='True Positive Rate',
-                xaxis=dict(range=[0, 1], constrain='range'), # ROC 커브 범위 고정
-                yaxis=dict(range=[0, 1], scaleanchor='x', scaleratio=1, constrain='range') # ROC 커브 범위 고정
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
+        
+        # 4. 모델 성능 지표
+        st.header("모델 성능 지표")
+        
+        if 'is_anomaly' in df.columns and 'prediction' in df.columns:
+            metrics = calculate_model_metrics(df)
+            if metrics:
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("정밀도 (Precision)", f"{metrics['precision']:.3f}")
+                with col2:
+                    st.metric("재현율 (Recall)", f"{metrics['recall']:.3f}")
+                with col3:
+                    st.metric("F1 점수", f"{metrics['f1']:.3f}")
+                
+                # ROC 커브
+                from sklearn.metrics import roc_curve, auc
+                fpr, tpr, _ = roc_curve(df['is_anomaly'], df['prediction'])
+                roc_auc = auc(fpr, tpr)
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=fpr,
+                    y=tpr,
+                    name=f'ROC 커브 (AUC = {roc_auc:.3f})'
+                ))
+                fig.add_trace(go.Scatter(
+                    x=[0, 1],
+                    y=[0, 1],
+                    name='무작위 예측',
+                    line=dict(dash='dash')
+                ))
+                
+                fig.update_layout(
+                    title='ROC 커브',
+                    xaxis_title='False Positive Rate',
+                    yaxis_title='True Positive Rate',
+                    xaxis=dict(range=[0, 1], constrain='range'), # ROC 커브 범위 고정
+                    yaxis=dict(range=[0, 1], scaleanchor='x', scaleratio=1, constrain='range') # ROC 커브 범위 고정
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("모델 성능 지표를 계산할 데이터가 부족하거나, 필요한 컬럼이 없습니다.")
         else:
-            st.info("모델 성능 지표를 계산할 데이터가 부족하거나, 필요한 컬럼이 없습니다.")
-    else:
-        st.warning("모델 성능 지표를 위한 필수 컬럼 (is_anomaly, prediction)이 없습니다.")
+            st.warning("모델 성능 지표를 위한 필수 컬럼 (is_anomaly, prediction)이 없습니다.")
 
 if __name__ == "__main__":
     main()
