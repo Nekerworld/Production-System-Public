@@ -23,8 +23,8 @@ st.set_page_config(
     layout="wide"
 )
 
-@st.cache_data # 데이터를 캐싱하여 재로드 방지
-def load_historical_data():
+@st.cache_data
+def load_historical_data(selected_file):
     """과거 데이터를 로드하는 함수"""
     try:
         # 경로 설정 (함수 내부에서 정의)
@@ -35,6 +35,9 @@ def load_historical_data():
         if not csv_paths:
             st.error("데이터 파일을 찾을 수 없습니다.")
             return None
+        
+        # 선택된 파일의 전체 경로 찾기
+        selected_path = next(p for p in csv_paths if os.path.basename(p) == selected_file)
         
         # 에러 데이터 로드 (함수 내부에서 정의)
         error_df = pd.read_csv(os.path.join(DATA_DIR, 'Error Lot list.csv'))
@@ -69,15 +72,21 @@ def load_historical_data():
 
             return df
         
-        # 모든 데이터 로드 및 병합
-        dataframes = [load_one(p) for p in csv_paths]
-        df = pd.concat(dataframes, ignore_index=True)
+        # 선택된 파일만 로드
+        df = load_one(selected_path)
         
         return df
         
     except Exception as e:
         st.error(f"데이터 로드 중 오류 발생: {str(e)}")
         return None
+
+def get_available_files():
+    """사용 가능한 CSV 파일 목록을 반환하는 함수"""
+    DATA_DIR = os.path.join('data', '장비이상 조기탐지', '5공정_180sec')
+    csv_paths = [p for p in glob(os.path.join(DATA_DIR, '*.csv')) if
+                'Error Lot list' not in os.path.basename(p)]
+    return [os.path.basename(p) for p in csv_paths]
 
 # 전역 파라미터 (이 페이지의 분석 로직에서는 직접 사용되지 않을 수 있습니다.)
 WINDOW_WIDTH  = 3    
@@ -184,30 +193,157 @@ def get_average_response_time():
 def main():
     st.title("📊 데이터 분석")
     
-    # 데이터 로드
-    df = load_historical_data()
-    
-    if df is None: # 데이터 로드 실패 시
-        return
+    # CSS 스타일 적용
+    st.markdown("""
+        <style>
+        .stat-box {
+            background-color: #f0f2f6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-title {
+            color: #666666;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            color: #1f77b4;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
     # 1. 데이터 통계 정보
     st.header("데이터 통계 정보")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("총 데이터 포인트", len(df))
+        st.markdown("""
+            <div class="stat-box">
+                <div class="stat-title">총 데이터 포인트 수</div>
+                <div class="stat-value">307,083</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col2:
-        # 'is_anomaly' 컬럼이 없는 경우를 대비
-        if 'is_anomaly' in df.columns:
-            st.metric("이상치 수", int(df['is_anomaly'].sum()))
-        else:
-            st.metric("이상치 수", "N/A")
+        st.markdown("""
+            <div class="stat-box">
+                <div class="stat-title">총 데이터 수</div>
+                <div class="stat-value">51,084</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col3:
+        st.markdown("""
+            <div class="stat-box">
+                <div class="stat-title">정상 데이터 수</div>
+                <div class="stat-value">47,088</div>
+            </div>
+        """, unsafe_allow_html=True)  
+    with col4:
+        st.markdown("""
+            <div class="stat-box">
+                <div class="stat-title">이상치 수</div>
+                <div class="stat-value">3,996</div>
+            </div>
+        """, unsafe_allow_html=True)
+            
+        # 사용 가능한 파일 목록 가져오기
+    available_files = get_available_files()
+    
+    if not available_files:
+        st.error("분석할 데이터 파일이 없습니다.")
+        return
+    
+    st.markdown("---")
+    st.subheader(f"개별 데이터 분석")
+    # 파일 선택 위젯
+    selected_file = st.selectbox("", available_files)
+    
+    # 데이터 로드
+    df = load_historical_data(selected_file)
+    
+    if df is None: # 데이터 로드 실패 시
+        return
+
+    # 2. 데이터 상세 분석
+    st.header("데이터 상세 분석")
+    
+    tab1, tab2, tab3 = st.tabs(["이상 데이터", "정상/이상 분포", "데이터 상관관계"])
+    
+    with tab1:
         if 'is_anomaly' in df.columns:
-            st.metric("정상 데이터 수", int(len(df) - df['is_anomaly'].sum()))
+            anomaly_data = df[df['is_anomaly'] == 1]
+            if not anomaly_data.empty:
+                st.dataframe(anomaly_data, use_container_width=True)
+                st.warning(f"이상 데이터 수: {len(anomaly_data)}")
+            else:
+                st.success("이상 데이터 없음")
         else:
-            st.metric("정상 데이터 수", "N/A")
+            st.warning("이상 데이터 분석을 위한 'is_anomaly' 컬럼이 없습니다.")
+    
+    with tab2:
+        if 'is_anomaly' in df.columns:
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                # 정상/이상 분포 파이 차트
+                anomaly_counts = df['is_anomaly'].value_counts()
+                fig = px.pie(
+                    values=anomaly_counts.values,
+                    names=['정상', '이상'],
+                    title='정상/이상 데이터 분포'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                # 시간대별 정상/이상 분포
+                df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
+                hourly_dist = df.groupby(['hour', 'is_anomaly']).size().unstack(fill_value=0)
+                fig = px.bar(
+                    hourly_dist,
+                    title='시간대별 정상/이상 데이터 분포',
+                    labels={'value': '데이터 수', 'hour': '시간'},
+                    barmode='group'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("정상/이상 분포 분석을 위한 'is_anomaly' 컬럼이 없습니다.")
+    
+    with tab3:
+        if 'is_anomaly' in df.columns:
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                # 산점도
+                fig = px.scatter(
+                    df,
+                    x='timestamp',
+                    y='prediction',
+                    color='is_anomaly',
+                    title='시간에 따른 예측값 분포',
+                    labels={'prediction': '예측값', 'timestamp': '시간'}
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                # 이상치가 없는 경우 처리
+                if df['is_anomaly'].sum() == 0:
+                    st.info("이 데이터에는 이상치가 없습니다.")
+                else:
+                    fig_correlation = px.scatter(
+                        df,
+                        x='Temp',
+                        y='Current',
+                        color='is_anomaly',
+                        title='온도와 전류의 관계',
+                        labels={'Temp': '온도', 'Current': '전류'},
+                        color_discrete_map={0: 'blue', 1: 'red'}
+                    )
+                    st.plotly_chart(fig_correlation, use_container_width=True)
+        else:
+            st.warning("데이터 상관관계 분석을 위한 'is_anomaly' 컬럼이 없습니다.")
    
     # 3. 이상 감지 패턴 분석
     st.header("이상 감지 패턴 분석")
