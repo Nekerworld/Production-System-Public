@@ -85,6 +85,15 @@ Process 컬럼은 어떠한 공정에서 측정된 데이터인지 나타내는 
 
 ---
 
+### 개발된 대시보드 사진
+![KakaoTalk_20250618_181714194](https://github.com/user-attachments/assets/84024c4c-bdaa-4050-b944-d4970bde1422)
+![KakaoTalk_20250618_181721557](https://github.com/user-attachments/assets/4100a256-3b6b-4572-a800-05a01eae65cd)
+![KakaoTalk_20250618_181732989](https://github.com/user-attachments/assets/51a21db6-0041-44df-9b07-8e328af8b002)
+![KakaoTalk_20250618_181746214](https://github.com/user-attachments/assets/0bc40f74-23ab-41ce-8de8-e1b5a6defc7a)
+![KakaoTalk_20250618_181757490](https://github.com/user-attachments/assets/5790fe47-4c1d-46f8-a674-3bf0bd899f18)
+
+---
+
 ### 🚀 실행 방법
 
 이 레포지토리를 클론한 후, 해당 폴더에서 터미널/명령 프롬프트를 열고 아래의 명령어를 입력해주세요.
