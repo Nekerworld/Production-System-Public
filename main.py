@@ -8,18 +8,18 @@ import streamlit as st
 
 # 페이지 설정
 st.set_page_config(
-    page_title="생산시스템 모니터링 시스템",
+    page_title="탐사로봇 대시보드",
     page_icon="🏭",
     layout="wide"
 )
 
-# 사이드바 내용 추가
-st.sidebar.header("2조 전자경영 팀")
-st.sidebar.write("총괄팀장: 이인수")
-st.sidebar.write("개발팀장: 김윤성")
-st.sidebar.write("분석팀장: 최승환")
-st.sidebar.write("조원: 이지원")
-st.sidebar.markdown("---")
+# # 사이드바 내용 추가
+# st.sidebar.header("2조 전자경영 팀")
+# st.sidebar.write("총괄팀장: 이인수")
+# st.sidebar.write("개발팀장: 김윤성")
+# st.sidebar.write("분석팀장: 최승환")
+# st.sidebar.write("조원: 이지원")
+# st.sidebar.markdown("---")
 
 # --- 1. 히어로 섹션 ---
 with st.container():
@@ -182,8 +182,8 @@ with st.container():
     st.markdown("""
     <div class='section section1'>
         <div class='section-content'>
-            <h1 class='hero-title'>열풍건조 장비 이상감지</h1>
-            <p class='hero-subtitle'>열풍건조 공정의 비정상 패턴을 AI 모델을 활용하여 실시간으로 감지하고 <br>이상을 예측함으로써 생산 효율을 극대화합니다.</p>
+            <h1 class='hero-title'>AI 험지탐사 로봇 시스템</h1>
+            <p class='hero-subtitle'>극한 환경에서 자율적으로 정보를 수집하고<br>지형과 장애물을 인식하여 구조 및 정찰 임무를 수행하는 AI 로봇 시스템입니다.</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -192,10 +192,11 @@ with st.container():
     st.markdown("""
     <div class='section section2'>
         <div class='section-content'>
-            <h2 class='section-header'>생산 현장의 보이지 않는 위협</h2>
+            <h2 class='section-header'>험지에 존재하는 보이지 않는 위협</h2>
             <p class='section-text'>
-            복잡한 생산 공정에서 발생하는 미세한 이상 징후는 생산성 저하, 품질 불량, 심지어는 치명적인 설비 고장으로 <br>이어질 수 있습니다.
-            전통적인 방식으로는 이러한 비정상 패턴을 사전에 감지하기 어렵고, <br>문제가 발생한 후에야 인지하는 경우가 대부분입니다.
+                재난 현장, 무너진 건물, 군사 정찰 지역 등 험지는 정보 수집과 인명 구조에 치명적인 위험을 내포하고 있습니다.<br>
+                기존의 인력에 의한 탐사나 바퀴형 로봇, 또는 수동 조종 시스템은 자율성과 환경 적응력에서 한계를 드러냅니다.<br>
+                이 문제를 해결하기 위해선 복잡한 지형에서도 자율적으로 이동하고, 주변 환경을 인식할 수 있는 새로운 접근이 필요합니다.
             </p>
         </div>
     </div>
@@ -205,16 +206,16 @@ with st.container():
     st.markdown("""
     <div class='section section3'>
         <div class='section-content'>
-            <h2 class='section-header'>우리의 솔루션: AI 기반 실시간 모니터링</h2>
+            <h2 class='section-header'>우리의 솔루션: AI 기반 험지 탐사로봇</h2>
             <p class='section-text'>
-            AI 모델 기반 모니터링 시스템은 열풍건조 공정에서 발생하는 전류와 온도 등의 방대한 센서 데이터를 <br>딥러닝 모델이 실시간으로 분석합니다.
-            정상 범주를 벗어나는 미세한 변화까지 학습하여 <br>이상 징후를 즉시 감지하고, 관리자에게 알림을 전송합니다.
+            본 시스템은 다관절 족보행 로봇에 고성능 센서와 딥러닝 알고리즘을 결합하여 <br>
+            실시간 객체 인식 및 장애물 회피, 경로 재계산 등 자율적인 임무 수행이 가능합니다.
             </p>
             <ul class='section-text'>
-                <li class='feature-point'><b>실시간 이상 감지:</b> 딥러닝 모델이 연속적인 데이터를 분석하여 비정상 패턴 즉시 식별.</li>
-                <li class='feature-point'><b>예지 보전 가능성:</b> 고장 전 징후를 포착하여 선제적인 유지보수 계획 수립.</li>
-                <li class='feature-point'><b>직관적인 대시보드:</b> 전류, 온도 추이, 이상 확률 등 핵심 정보를 한눈에 파악.</li>
-                <li class='feature-point'><b>맞춤형 알림 설정:</b> 이메일 등 다양한 방식으로 이상 발생 즉시 관리자에게 통보.</li>
+                <li class='feature-point'><b>실시간 환경 분석:</b> LiDAR와 카메라로 지형을 인식하고 3D 맵 작성.</li>
+                <li class='feature-point'><b>YOLO 기반 객체 탐지:</b> 사람, 균열, 장애물 등 탐지 및 대응.</li>
+                <li class='feature-point'><b>지형 적응형 보행:</b> Adaptive Impedance를 통한 다리 높이/각도 조절.</li>
+                <li class='feature-point'><b>자율 주행 기능:</b> RRT, A*, POMDP 등 경로 계획 알고리즘 적용.</li>
             </ul>
         </div>
     </div>
@@ -224,14 +225,14 @@ with st.container():
     st.markdown("""
     <div class='section section4'>
         <div class='section-content'>
-            <h2 class='section-header'>견고한 시스템을 위한 핵심 기술</h2>
+            <h2 class='section-header'>자율성과 안정성을 위한 핵심 기술</h2>
             <p class='section-text'>
-            최첨단 딥러닝 알고리즘과 현대적인 웹 프레임워크를 결합하여 <br>안정적이고 효율적인 모니터링 시스템을 구축했습니다.
+            극한 환경에서도 안정적인 탐사를 가능하게 하기 위해<br>최첨단 센서 융합 기술과 로봇 제어 알고리즘을 통합하였습니다.
             </p>
             <ul class='section-text'>
-                <li class='feature-point'><b>LSTM 딥러닝 모델:</b> 시계열 데이터의 장기 의존성을 학습하여 고도화된 이상 감지 수행.</li>
-                <li class='feature-point'><b>Streamlit 프레임워크:</b> 빠르고 효율적인 웹 대시보드 구축 및 데이터 시각화.</li>
-                <li class='feature-point'><b>Plotly 라이브러리:</b> 인터랙티브하고 미려한 데이터 시계열 및 분석 그래프 제공.</li>
+                <li class='feature-point'><b>IMU & PID 제어:</b> 보행 안정화와 전복 방지를 위한 실시간 자세 보정.</li>
+                <li class='feature-point'><b>SLAM 기반 자율맵 작성:</b> 미지 환경에서도 자기 위치 추정과 지도 생성.</li>
+                <li class='feature-point'><b>P2P 네트워크:</b> 로봇 간 직접 통신을 통해 신뢰성 높은 데이터 공유.</li>
             </ul>
         </div>
     </div>
@@ -241,15 +242,15 @@ with st.container():
     st.markdown("""
     <div class='section section5'>
         <div class='section-content'>
-            <h2 class='section-header'>생산 효율을 한 단계 끌어올리다</h2>
+            <h2 class='section-header'>AI 로봇이 만드는 미래의 구조 전략</h2>
             <p class='section-text'>
-            우리의 시스템은 단순한 모니터링을 넘어, 실제 비즈니스 가치를 창출합니다.
+            단순한 원격 제어를 넘어, 우리 시스템은 자율적 판단과 데이터 기반 대응이 가능한<br>지능형 플랫폼으로 확장됩니다.
             </p>
             <ul class='section-text'>
-                <li class='feature-point'><b>생산성 향상:</b> 이상 발생률 감소 및 예측을 통한 가동 시간 극대화.</li>
-                <li class='feature-point'><b>품질 개선:</b> 잠재적 불량 요인 조기 발견으로 제품 품질 향상.</li>
-                <li class='feature-point'><b>유지보수 비용 절감:</b> 계획되지 않은 설비 중단 방지 및 효율적인 자원 배분.</li>
-                <li class='feature-point'><b>의사결정 지원:</b> 정확한 데이터 기반으로 신속하고 현명한 판단 지원.</li>
+                <li class='feature-point'><b>재난 구조 효율화:</b> 구조대원 접근 전 탐색 및 위험 정보 제공.</li>
+                <li class='feature-point'><b>군사 정찰 활용:</b> 은폐성 높은 구조로 적진 탐지 및 실시간 영상 수집.</li>
+                <li class='feature-point'><b>산업 안전 향상:</b> 고온, 고압 위험지역의 자동 순찰 및 사고 예방.</li>
+                <li class='feature-point'><b>정밀 데이터 확보:</b> 극지/지하 등에서 고해상도 시각 정보와 센서 데이터 수집.</li>
             </ul>
         </div>
     </div>
@@ -259,9 +260,9 @@ with st.container():
     st.markdown("""
     <div class='section section6'>
         <div class='section-content'>
-            <h2 class='section-header'>지능형 생산의 미래, 지금 경험하세요</h2>
+            <h2 class='section-header'>험지 탐사의 미래를 지금 확인하세요.</h2>
             <p class='section-text'>
-            본 시스템에 대한 더 자세한 정보나 문의 사항이 있으시면 언제든지 연락 주십시오.
+            본 프로젝트에 대한 더 자세한 정보나 문의 사항, 또는 협업 문의는 아래의 연락처로 연락해주시기 바랍니다.
             </p>
             <div class="contact-info">
                 <div class="contact-item">
@@ -274,7 +275,7 @@ with st.container():
                 </div>
                 <div class="contact-item">
                     <i class="fab fa-github"></i>
-                    <a href="https://github.com/Nekerworld/Production-System-Public" target="_blank">GitHub Repository</a>
+                    <a href="https://github.com/Find-For-You" target="_blank">GitHub Repository</a>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt"></i>
@@ -282,7 +283,7 @@ with st.container():
                 </div>
             </div>
             <p class='section-text' style='margin-top: 2em;'>
-            지금 바로 시작하여 더 스마트하고 효율적인 생산 시스템을 구축하세요.
+            험지에서도 안전하게, 지금 바로 지능형 로봇을 이용한 탐사를 시작하세요.
             </p>
         </div>
     </div>
